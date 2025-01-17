@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Startup {
+  id                String   @id @default(cuid())
+  name              String
+  domain            String
+  creationDate      DateTime
+  managementTeam    String[]
+  description       String?
+  financialTransactions FinancialTransaction[]
+  appointments      Appointment[]
+  deadlines         Deadline[]
+}
+
+model FinancialTransaction {
+  id                String   @id @default(cuid())
+  startupId         String
+  startup           Startup  @relation(fields: [startupId], references: [id])
+  amount            Float
+  date              DateTime
+  type              String
+  round             Int?
+  description       String?
+}
+
+model Appointment {
+  id                String   @id @default(cuid())
+  startupId         String
+  startup           Startup  @relation(fields: [startupId], references: [id])
+  title             String
+  date              DateTime
+  type              String
+  description       String?
+}
+
+model Deadline {
+  id                String   @id @default(cuid())
+  startupId         String
+  startup           Startup  @relation(fields: [startupId], references: [id])
+  title             String
+  date              DateTime
+  type              String
+  description       String?
+  completed         Boolean  @default(false)
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  notifications     Notification[]
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  type              String
+  message           String
+  date              DateTime
+  isRead            Boolean  @default(false)
+}
