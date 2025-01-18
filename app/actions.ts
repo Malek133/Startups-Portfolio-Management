@@ -2,15 +2,30 @@
 
 import { revalidatePath } from 'next/cache'
 import  prisma  from '@/lib/prisma'
+import { AppointmentData, DeadlineData,
+   StartupData, TransactionData } from '@/interface'
 
-interface StartupData {
-  name: string
-  domain: string
-  creationDate: string
-  managementTeam: string
-  description?: string
-}
 
+
+   export async function addTransaction(data: TransactionData) {
+    try {
+      const transaction = await prisma.financialTransaction.create({
+        data: {
+          startupId: data.startupId,
+          amount: parseFloat(data.amount),
+          date: new Date(data.date),
+          type: data.type,
+          description: data.description,
+        },
+      })
+  
+      revalidatePath('/dashboard/financials')
+      return { success: true, transaction }
+    } catch (error) {
+      console.error('Failed to add transaction:', error)
+      return { success: false, error: 'Failed to add transaction' }
+    }
+  }
 export async function createStartup(data: StartupData) {
   try {
     const startup = await prisma.startup.create({
@@ -66,3 +81,59 @@ export async function deleteStartup(id: string) {
   }
 }
 
+export async function addDeadline(data: DeadlineData) {
+  try {
+    const deadline = await prisma.deadline.create({
+      data: {
+        startupId: data.startupId,
+        title: data.title,
+        date: new Date(data.date),
+        type: data.type,
+        description: data.description,
+      },
+    })
+
+    revalidatePath('/dashboard/schedule')
+    return { success: true, deadline }
+  } catch (error) {
+    console.error('Failed to add deadline:', error)
+    return { success: false, error: 'Failed to add deadline' }
+  }
+}
+
+export async function completeDeadline(formData: FormData) {
+  const id = formData.get('id') as string
+
+  try {
+    await prisma.deadline.update({
+      where: { id },
+      data: { completed: true },
+    })
+
+    revalidatePath('/dashboard/schedule')
+  } catch (error) {
+    console.error('Failed to complete deadline:', error)
+  }
+}
+
+
+
+export async function addAppointment(data: AppointmentData) {
+  try {
+    const appointment = await prisma.appointment.create({
+      data: {
+        startupId: data.startupId,
+        title: data.title,
+        date: new Date(data.date),
+        type: data.type,
+        description: data.description,
+      },
+    })
+
+    revalidatePath('/dashboard/schedule')
+    return { success: true, appointment }
+  } catch (error) {
+    console.error('Failed to add appointment:', error)
+    return { success: false, error: 'Failed to add appointment' }
+  }
+}
